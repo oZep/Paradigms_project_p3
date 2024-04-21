@@ -3,9 +3,10 @@
 % locally defined for your convenience. no path switching required
 dataset("./imageDataset2_15_20/").
 
-% location of histogram q00 for quick access
-% also locally defined
-q00("./queryImagesWithHistograms/queryImages/q00.jpg.txt").
+% prepares file so you can use it without needing to type the long file path
+% syntax: prepare_file("q00.jpg.txt", Preparedfile)
+prepare_file(Filename, PFile):-
+    string_concat("./queryImagesWithHistograms/queryImages/", Filename, PFile).
 
 % directory_textfiles(DirectoryName, ListOfTextfiles)
 % produces the list of text files in a directory
@@ -36,14 +37,18 @@ compare_histograms(QueryHisto, DatasetDirectory, DatasetFiles, Scores):-
     % Call supplementary comparer that will do most of the work
     compare_histograms(QueryHisto, DatasetDirectory, DatasetFiles, [], Scores).
 
-% supplementary comparer. compares every file to the queryhisto, then returns the scores
+% supplementary comparer. recursively compares every file to the queryhisto, then returns the scores
 % in doing so, it calls the relevant sub-predicates
 compare_histograms(_, _, [], Scores, Scores).
 compare_histograms(QueryHisto, DatasetDirectory, [Headfile|Tailfiles], TempScores, Scores):-    
 
+    % gets the proper directory for the current head file
     string_concat(DatasetDirectory, Headfile, Currentfile),
+    % reads in the histogram for the current file
     read_hist_file(Currentfile, Currenthistfile),
+    % gets the intersecting score
     histogram_intersection(QueryHisto, Currenthistfile, Currentscore),
+    % recursively continues the rest of the datasets
     compare_histograms(QueryHisto, DatasetDirectory, Tailfiles, [(Headfile, Currentscore)|TempScores], Scores).
 
 % histogram_intersection(Histogram1, Histogram2, Score)
